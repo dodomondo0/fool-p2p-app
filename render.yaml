@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: fool-signaling-server
+    env: python
+    buildCommand: "pip install -r server/requirements.txt"
+    startCommand: "python server/web.py"
