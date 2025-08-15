@@ -1,16 +1,17 @@
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 
-# Убираем явное указание async_mode для автоматического выбора
+# Принудительно используем threading для избежания проблем с eventlet на Python 3.13
 socketio = SocketIO(app, 
                    cors_allowed_origins="*",
                    transports=['websocket', 'polling'],
                    ping_timeout=60,
-                   ping_interval=25)
-# Не указываем async_mode - пусть Flask-SocketIO сам выберет подходящий
+                   ping_interval=25,
+                   async_mode='threading')  # Явно указываем threading
 
 rooms = {}
 
@@ -107,7 +108,7 @@ def handle_host_available(data):
         emit('host_available', data, room=room)
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     print(f"Starting signaling server on port {port}...")
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    # Разрешаем использование Werkzeug в продакшене
+    socketio.run(app, host='0.0.0.0', port=port, log_output=True, allow_unsafe_werkzeug=True)
