@@ -3,13 +3,14 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-# Убираем async_mode или используем автоматическое определение
+
+# Явно указываем eventlet как async_mode
 socketio = SocketIO(app, 
                    cors_allowed_origins="*",
                    transports=['websocket', 'polling'],
                    ping_timeout=60,
-                   ping_interval=25)
-# Не указываем async_mode - пусть Flask-SocketIO сам выберет подходящий
+                   ping_interval=25,
+                   async_mode='eventlet')
 
 rooms = {}
 
