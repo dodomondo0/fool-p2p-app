@@ -3,16 +3,15 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-# Добавляем настройки для Render
+# Убираем async_mode или используем автоматическое определение
 socketio = SocketIO(app, 
                    cors_allowed_origins="*",
                    transports=['websocket', 'polling'],
                    ping_timeout=60,
-                   ping_interval=25,
-                   async_mode='eventlet')
+                   ping_interval=25)
+# Не указываем async_mode - пусть Flask-SocketIO сам выберет подходящий
 
-# Храним информацию о комнатах и хостах
-rooms = {}  # {room_name: {'host_id': id, 'password': password, 'clients': []}}
+rooms = {}
 
 @app.route('/')
 def index():
@@ -25,17 +24,14 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     print(f"Client disconnected: {request.sid}")
-    # Удаляем клиента из всех комнат
     rooms_to_remove = []
     for room_name, room_data in list(rooms.items()):
         if request.sid in room_data.get('clients', []):
             room_data['clients'].remove(request.sid)
-            # Если хост отключился, удаляем комнату
             if room_data.get('host_id') == request.sid:
                 rooms_to_remove.append(room_name)
                 print(f"Room {room_name} deleted (host disconnected)")
     
-    # Удаляем пустые комнаты
     for room_name in rooms_to_remove:
         if room_name in rooms:
             del rooms[room_name]
@@ -52,14 +48,11 @@ def handle_join(data):
         emit('joined', {'status': 'error', 'message': 'Room name is required'})
         return
     
-    # Если клиент пытается создать комнату как хост
     if is_host:
-        # Проверяем, существует ли уже такая комната
         if room_name in rooms:
             emit('joined', {'status': 'error', 'message': 'Room already exists'})
             return
         
-        # Создаем новую комнату
         rooms[room_name] = {
             'host_id': request.sid,
             'password': password,
@@ -70,20 +63,17 @@ def handle_join(data):
         print(f"Room {room_name} created by {request.sid}")
         
     else:
-        # Клиент пытается присоединиться к существующей комнате
         if room_name not in rooms:
             emit('joined', {'status': 'error', 'message': 'Room not found'})
             return
         
         room_data = rooms[room_name]
         
-        # Проверяем пароль
         required_password = room_data.get('password', '')
         if required_password and password != required_password:
             emit('joined', {'status': 'error', 'message': 'Invalid password'})
             return
         
-        # Добавляем клиента в комнату
         if request.sid not in room_data['clients']:
             room_data['clients'].append(request.sid)
         join_room(room_name)
@@ -95,7 +85,6 @@ def handle_signal(data):
     target = data['target']
     room = data.get('room')
     
-    # Проверяем, что оба клиента в одной комнате
     if room and room in rooms:
         room_data = rooms[room]
         if target in room_data.get('clients', []):
@@ -114,7 +103,6 @@ def handle_host_available(data):
     if room in rooms:
         rooms[room]['host_id'] = host_id
         print(f"Host {host_id} available in room {room}")
-        # Отправляем уведомление всем в комнате
         emit('host_available', data, room=room)
 
 if __name__ == '__main__':
