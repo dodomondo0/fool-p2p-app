@@ -1,3 +1,4 @@
+# server/signaling_server.py
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
@@ -5,13 +6,15 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 
-# Принудительно используем threading для избежания проблем с eventlet на Python 3.13
+# Используем None, чтобы Flask-SocketIO сам выбрал лучший доступный режим.
+# Если eventlet установлен и совместим, он будет выбран.
+# Если нет, может выбрать threading или другой.
 socketio = SocketIO(app, 
                    cors_allowed_origins="*",
                    transports=['websocket', 'polling'],
-                   ping_timeout=60,
-                   ping_interval=25,
-                   async_mode='threading')  # Явно указываем threading
+                   ping_timeout=120,      # Увеличиваем таймауты
+                   ping_interval=50,      # Увеличиваем интервал
+                   async_mode=None)       # Автоматический выбор режима
 
 rooms = {}
 
@@ -107,8 +110,12 @@ def handle_host_available(data):
         print(f"Host {host_id} available in room {room}")
         emit('host_available', data, room=room)
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    print(f"Starting signaling server on port {port}...")
-    # Разрешаем использование Werkzeug в продакшене
-    socketio.run(app, host='0.0.0.0', port=port, log_output=True, allow_unsafe_werkzeug=True)
+# --- УДАЛЕН БЛОК if __name__ == '__main__': ---
+# Render сам запустит приложение app (WSGI).
+# Если нужно запустить локально для тестирования, создайте отдельный файл
+# или временно раскомментируйте блок ниже:
+#
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 10000))
+#     print(f"Starting signaling server locally on port {port}...")
+#     socketio.run(app, host='0.0.0.0', port=port, log_output=True, allow_unsafe_werkzeug=True, debug=True)

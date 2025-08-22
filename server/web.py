@@ -1,8 +1,8 @@
-from signaling_server import app, socketio
-import os
+# server/web.py
+# Этот файл служит точкой входа для WSGI-сервера (например, Render).
+# Он импортирует приложение Flask и SocketIO, но НЕ запускает сервер.
 
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))
-    print(f"Starting web server on port {port}...")
-    # Разрешаем использование Werkzeug в продакшене
-    socketio.run(app, host='0.0.0.0', port=port, log_output=True, allow_unsafe_werkzeug=True)
+from signaling_server import app, socketio
+
+# Render будет использовать переменную 'app' как WSGI-приложение.
+# SocketIO уже прикреплен к app внутри signaling_server.py
