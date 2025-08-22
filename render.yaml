@@ -1,6 +1,10 @@
+# render.yaml
 services:
   - type: web
     name: fool-signaling-server
     env: python
     buildCommand: "pip install -r server/requirements.txt"
     startCommand: "python server/web.py"
+    envVars:
+      - key: PYTHON_VERSION # ИЗМЕНИТЬ
+        value: 3.11         # ИЗМЕНИТЬ (или 3.12)
