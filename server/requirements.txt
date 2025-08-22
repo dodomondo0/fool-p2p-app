@@ -1,5 +1,6 @@
+# server/requirements.txt
 Flask==2.3.2
 Flask-SocketIO==5.3.6
 python-socketio==5.8.0
-eventlet==0.33.3 # Попробуйте сначала с этим, если проблемы - удалите
+# eventlet==0.33.3 # УДАЛИТЬ или закомментировать из-за несовместимости с Python 3.13
 gunicorn==20.1.0

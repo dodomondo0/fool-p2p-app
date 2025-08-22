@@ -6,15 +6,13 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 
-# Используем None, чтобы Flask-SocketIO сам выбрал лучший доступный режим.
-# Если eventlet установлен и совместим, он будет выбран.
-# Если нет, может выбрать threading или другой.
+# Вернем threading, так как eventlet несовместим с Python 3.13
 socketio = SocketIO(app, 
                    cors_allowed_origins="*",
                    transports=['websocket', 'polling'],
                    ping_timeout=120,      # Увеличиваем таймауты
                    ping_interval=50,      # Увеличиваем интервал
-                   async_mode=None)       # Автоматический выбор режима
+                   async_mode='threading') # Явно указываем threading
 
 rooms = {}
 
