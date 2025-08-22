@@ -1,10 +1,10 @@
 # render.yaml
 services:
   - type: web
-    name: fool-signaling-server
-    env: python
-    buildCommand: "pip install -r server/requirements.txt"
-    startCommand: "python server/web.py"
-    envVars:
-      - key: PYTHON_VERSION # ИЗМЕНИТЬ
-        value: 3.11         # ИЗМЕНИТЬ (или 3.12)
+    name: fool-signaling-server-nodejs # Изменил имя для ясности
+    env: node
+    buildCommand: "cd node_server && npm install"
+    startCommand: "cd node_server && npm start"
+    # envVars:
+    #   - key: NODE_VERSION
+    #     value: 18 # Можно указать версию Node.js, если нужно
